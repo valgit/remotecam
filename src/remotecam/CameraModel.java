@@ -38,14 +38,9 @@ public class CameraModel {
 		try {
 			InputStream in = new ByteArrayInputStream(message.array());
 			BufferedImage img = ImageIO.read(in);
-			
-			// debug !
-			int width = img.getWidth();
-			int height = img.getHeight();
-			System.out.println("size: "+width+" h: "+height);
-			
-			//TODO: _Context.newImg(img);
-			//onShot(img);
+					
+			if (listener != null)
+				listener.onShot(img);
 			
 		} catch (IOException e) {			
 			e.printStackTrace();
@@ -55,6 +50,10 @@ public class CameraModel {
 	public void takeShot() {
 		System.out.println("take shot");
 		conn.send("takeShot");
+	}
+	
+	public String getModel() {
+		return model;
 	}
 	
 	public void attach(CameraModelListener listener) {

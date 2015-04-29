@@ -18,15 +18,16 @@ import java.io.File;
 import java.io.IOException;  
 import java.net.InetSocketAddress;
 
-public class jimage extends Canvas implements ActionListener,obsCamera {
+public class jimage extends Canvas implements ActionListener,CameraModelListener,CamSocketServerListener {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	private File selectedFile;// = new File("src/images/image01.jpg");
-	//TODO:
-	private remotecam camera;
+	
+	private CameraModel camera;
 	private CamSocketServer server;
+	
 	private JButton snap;
 	private JButton filesel;
 	
@@ -69,13 +70,10 @@ public class jimage extends Canvas implements ActionListener,obsCamera {
 	void createAndShowGUI() {
 		//Create and set up the window.
 		System.out.println("createAndShowGUI");
-	/*
-		@SuppressWarnings("unused")
-		IPCamera server;
-		server = new IPCamera(8080,this);
-		*/
+	
 		// websocket server ?
-		server = new CamSocketServer(new InetSocketAddress("10.24.244.99",5000),5000);
+		
+		server = new CamSocketServer(new InetSocketAddress("10.24.244.99",5000),5000,this);
 	    server.start();
 	}
 
@@ -95,26 +93,38 @@ public class jimage extends Canvas implements ActionListener,obsCamera {
 		}
 		}
 		if(e.getSource() == snap) {
-			System.out.println("take snap");
-			//BufferedImage shot = camera.takeShot();
-			//TODO: camera.takeShot();
-			server.takeShot();
+			//System.out.println("take snap");
+			if (camera != null)
+				camera.takeShot();			
 		}
 	}
 
 
 	@Override
-	public void newImg(BufferedImage img) {
+	public void onShot(BufferedImage img) {
 		// TODO Auto-generated method stub
-		System.out.println("Client send new img");
+		System.out.println("onShot: new img");
 		int width = img.getWidth();
 		int height = img.getHeight();
-		System.out.println("size: "+width+" h: "+height);
+		System.out.println("onShot: size: "+width+" h: "+height);
+	}
+
+		@Override
+	public void onPreview(BufferedImage img) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
-	public void addCamera(remotecam cam) {
-		camera = cam;
+	public void addCamera(CameraModel camera) {
+		this.camera = camera;
+		camera.attach(this);
+	}
+
+	@Override
+	public void delCamera(CameraModel camera) {
+		camera.detach(this);
+		this.camera = null;		
 	}
 
 }
