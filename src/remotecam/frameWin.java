@@ -9,6 +9,10 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 public class frameWin extends JFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private jimage liveview;
 	
 	public frameWin(){

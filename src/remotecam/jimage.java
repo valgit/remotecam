@@ -30,32 +30,46 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	
 	private JButton snap;
 	private JButton filesel;
+	private BufferedImage currentShot;
+	
+	 
+	 public void paintComponent(Graphics g) {
+	        
+		 System.out.println("paintComponent - in ");
+	 }
+	 
 	
 	public void paint(Graphics g) {  
-
-		Toolkit t=Toolkit.getDefaultToolkit();  
+		//System.out.println("paint - in ");
+		//Toolkit t=Toolkit.getDefaultToolkit();  
 		//Image i=t.getImage("p3.gif");  
 		g.setColor(Color.blue);
 		g.drawLine(30, 30, 80, 80);
 		g.drawRect(20, 150, 100, 100);
 		g.fillRect(20, 150, 100, 100);
 
-		try {
-			if (selectedFile != null) {
-				//System.out.println("paint");
-				BufferedImage img = ImageIO.read(selectedFile);
-				g.drawImage(img, 10,10,this);  
-			}
+		try { 
+			if (currentShot != null) {
+				System.out.println("currentShot");
+				g.drawImage(currentShot, 10,10,this);
+			} else
+				if (selectedFile != null) {
+					//System.out.println("paint");
+					BufferedImage img = ImageIO.read(selectedFile);
+					g.drawImage(img, 10,10,this);  
+				}
 
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
-
+		//System.out.println("paint - out ");
 	}  
 
 	public jimage(JFrame f) {
-		//setSize(300,300);
+		setSize(700,500);
 
+		f.getContentPane().add(this);
+		
 		filesel =new JButton("Select File");
 		filesel.addActionListener(this);
 
@@ -65,6 +79,10 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		snap.addActionListener(this);
 
 		f.getContentPane().add(snap);
+		
+		
+		
+		currentShot = null;
 	}
 
 	void createAndShowGUI() {
@@ -107,11 +125,14 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		int width = img.getWidth();
 		int height = img.getHeight();
 		System.out.println("onShot: size: "+width+" h: "+height);
+		currentShot = img;
+		repaint();
 	}
 
 		@Override
 	public void onPreview(BufferedImage img) {
 		// TODO Auto-generated method stub
+		System.out.println("onPreview: new img");
 		
 	}
 
