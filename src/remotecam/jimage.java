@@ -30,14 +30,7 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	
 	private JButton snap;
 	private JButton filesel;
-	private BufferedImage currentShot;
-	
-	 
-	 public void paintComponent(Graphics g) {
-	        
-		 System.out.println("paintComponent - in ");
-	 }
-	 
+	private BufferedImage currentShot; 
 	
 	public void paint(Graphics g) {  
 		//System.out.println("paint - in ");
