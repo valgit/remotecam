@@ -16,6 +16,7 @@ public class CameraModel {
 	private WebSocket conn;
 	private String model;
 	private List<String> WhiteBalanceList;
+	private int state;
 	
 	// should be a set ?
 	private CameraModelListener listener;
@@ -23,6 +24,7 @@ public class CameraModel {
 	public CameraModel(WebSocket conn) {
 		super();
 		this.conn = conn;
+		state = 0;
 	}
 	
 	public void parseMessage(String msg) {		
@@ -31,9 +33,14 @@ public class CameraModel {
 		} else
 		if (msg.startsWith("Shot")) {
 			System.out.println("new shot");
+			state = 2;
 		} else
 		if (msg.startsWith("Balance")) {
 			parseBalance(msg);
+		} else
+		if (msg.startsWith("Preview")) {
+			System.out.println("new preview");
+			state = 1;
 		} else
 			System.out.println("parseMessage: " + msg);
 	}
@@ -54,6 +61,8 @@ public class CameraModel {
 	public void parseMessage( ByteBuffer message ) {
 		System.out.println("parseMessage: bytes" );
 		
+		if (state == 2) {
+			System.out.println("parseMessage: in shot" );
 		try {
 			InputStream in = new ByteArrayInputStream(message.array());
 			BufferedImage img = ImageIO.read(in);
@@ -63,6 +72,10 @@ public class CameraModel {
 			
 		} catch (IOException e) {			
 			e.printStackTrace();
+		}
+		} else {
+			System.out.println("parseMessage: in preview" );
+		
 		}
 	}
 		
