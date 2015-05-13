@@ -125,8 +125,7 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		@Override
 	public void onPreview(BufferedImage img) {
 		// TODO Auto-generated method stub
-		System.out.println("onPreview: new img");
-		
+		System.out.println("onPreview: new img");		
 	}
 
 	@Override
