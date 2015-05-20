@@ -32,22 +32,22 @@ public class CameraModel {
 	public void parseMessage(String msg) {		
 		if (msg.startsWith("hello")) {
 			model = msg.split(":",2)[1];
-		} 
-		if (msg.startsWith("PSize")) {
-			getPreviewSize(msg);
-		}
-		if (msg.startsWith("Shot")) {
-			System.out.println("new shot");
-			state = 2;
-		}
-		if (msg.startsWith("Balance")) {
-			parseBalance(msg);
-		} 
-		if (msg.startsWith("Preview")) {
-			System.out.println("new preview");
-			state = 1;
-		} 
-		System.out.println("parseMessage: " + msg);
+		} else
+			if (msg.startsWith("PSize")) {
+				getPreviewSize(msg);
+			} else
+				if (msg.startsWith("Shot")) {
+					//System.out.println("new shot");
+					state = 2;
+				} else
+					if (msg.startsWith("Balance")) {
+						parseBalance(msg);
+					} else
+						if (msg.startsWith("Preview")) {
+							//System.out.println("new preview");
+							state = 1;
+						} else
+							System.out.println("parseMessage: " + msg);
 	}
 
 	/*
@@ -74,7 +74,7 @@ public class CameraModel {
 	}
 
 	public void parseMessage( ByteBuffer message ) {
-		System.out.println("parseMessage: bytes" );
+		
 
 		if (state == 2) {
 			System.out.println("parseMessage: in shot" );
@@ -89,9 +89,26 @@ public class CameraModel {
 				e.printStackTrace();
 			}
 		} else if (state == 1) {
-			System.out.println("parseMessage: in preview ("+width+","+height+")" );
-
-			//YuvImage img = new YuvImage(message, ImageFormat.NV21, PreviewSizeWidth, PreviewSizeHeight, null);
+			//System.out.println("parseMessage: in preview ("+width+","+height+")" );
+			// test encoding in phone?			
+			try {
+				InputStream in = new ByteArrayInputStream(message.array());
+				BufferedImage img = ImageIO.read(in);
+				
+				/* 
+				int width = img.getWidth();
+				int height = img.getHeight();
+				System.out.println("onPreview: (jpg) size: "+width+" h: "+height);
+				*/
+				if (listener != null)
+					listener.onPreview(img);
+				
+			} catch (IOException e) {				
+				e.printStackTrace();
+			}
+						
+		} else {
+			System.out.println("parseMessage: unhandled bytes, state : " + state );
 		}
 	}
 
