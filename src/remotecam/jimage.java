@@ -3,6 +3,8 @@ package remotecam;
 import java.awt.Canvas;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.*;
 
@@ -14,8 +16,12 @@ import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;  
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,19 +31,20 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private File selectedFile;// = new File("src/images/image01.jpg");
+	
+	//TODO:
+	private frameWin project;
 	
 	private CameraModel camera;
 	private CamSocketServer server;
 	
 	private JButton snap;
-	private JButton filesel;
+	
 	private BufferedImage currentShot; 
 	final static BasicStroke stroke = new BasicStroke(2.0f);
 	
 	public void paint(Graphics g) {  
-		Graphics2D g2d = (Graphics2D) g;
-		
+		Graphics2D g2d = (Graphics2D) g;		
 		
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
@@ -48,61 +55,71 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		//System.out.println("paint - in ");
 		//Toolkit t=Toolkit.getDefaultToolkit();  
 		//Image i=t.getImage("p3.gif");
-		/*
+		
+		int fw = getWidth();
+		int fh = getHeight();
+
+		//double ratio = (double)fw/fh;
+		g2d.setColor(Color.black);
+		g2d.fillRect(0, 0, fw, fh);
+		
+		if (currentShot != null) {
+			//System.out.println("currentShot");							
+			int h = currentShot.getHeight(null);
+			int w = currentShot.getWidth(null);
+			
+			//double imgratio =(double)w/h;
+			//System.out.println("Frame ratio : " + ratio + " Shot ratio : " + imgratio);
+			double echx = (double)w/fw;
+			double echy = (double)h/fh;
+			double ech = 1.0;
+			
+			if (echx < 1.0)
+				ech = echx;
+			if ((echy<1) && (echy> echx))
+				ech = echy;
+			//System.out.println("Frame echx : " + echx + " echy : " + echy + " choose :" + ech);
+			/*
+			g2d.drawImage(currentShot, 
+					0,0,(int)(w/ech),(int)(h/ech), // dest
+					0,0,w,h, // src
+					null);
+					*/
+			g2d.drawImage(currentShot, 
+					0,0,w,h, // dest
+					0,0,w,h, // src
+					null);
+		} 
+		
+		// draw HD frame
+		int hHD = 9* fw / 16;
+		int delta = (fh - hHD)/2;
+				
+		g2d.setPaint(Color.magenta);
+		g2d.setStroke(stroke);
+		
+		Rectangle2D HDRect = new Rectangle(0,delta,fw,hHD);
+		        
+        g2d.draw(HDRect);
+        /*
 		g2d.setColor(Color.blue);
 		g2d.drawLine(30, 30, 80, 80);
 		g2d.drawRect(20, 150, 100, 100);
 		g2d.fillRect(20, 150, 100, 100);
 		 */
-		int fw = getWidth();
-		int fh = getHeight();
-
-		if (currentShot != null) {
-			//System.out.println("currentShot");				
-			int w = currentShot.getWidth(null);
-			int h = currentShot.getHeight(null);
-
-			g2d.drawImage(currentShot, 
-					0,0,fw,fh, // dest
-					0,0,w,h, // src
-					null);
-		} else {
-			g2d.setColor(Color.black);
-			g2d.fillRect(5, 5, fw-5, fh-5);
-
-		}
-		
-		g2d.setPaint(Color.white);
-		g2d.setStroke(stroke);
-		//g2.draw(_currentSelectionRect);
-		
-		/*
-			if (selectedFile != null) {
-				//System.out.println("paint");
-				BufferedImage img = ImageIO.read(selectedFile);
-				g.drawImage(img, 10,10,this);  
-			}
-
-		 */
 	}  
 
-	public jimage(JFrame f) {
+	public jimage(frameWin f) {
 		setSize(700,500);
 
 		f.getContentPane().add(this);
-		
-		filesel =new JButton("Select File");
-		filesel.addActionListener(this);
-
-		f.getContentPane().add(filesel);
-
+				
 		snap =new JButton("Snap");
 		snap.addActionListener(this);
 
 		f.getContentPane().add(snap);
-		
-		
-		
+				
+		project = f;
 		currentShot = null;
 	}
 
@@ -119,18 +136,7 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == filesel) {
-		JFileChooser fileChooser = new JFileChooser();
-		//FileFilter filter = new FileNameExtensionFilter("JPEG files", "jpg");
-		//fileChooser.addChoosableFileFilter(filter);
-
-		int returnValue = fileChooser.showOpenDialog(null);
-		if (returnValue == JFileChooser.APPROVE_OPTION) {
-			selectedFile = fileChooser.getSelectedFile();
-			System.out.println(selectedFile.getName());
-			repaint();
-		}
-		}
+		
 		if(e.getSource() == snap) {
 			//System.out.println("take snap");
 			if (camera != null)
@@ -139,37 +145,29 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	}
 
 
-	private File getShotFile() {
-		//take the current timeStamp
-		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		File mediaFile;
-		
-		//and make a media file:
-		//TODO:
-		final String projectdir="d:\\work\\stopproj";
-		/* project dir */
-		mediaFile = new File(projectdir + File.separator + "DSC_" + timeStamp + ".jpg");
-		return mediaFile;
-	}
+	
 	
 	@Override
-	public void onShot(BufferedImage img) {
-		// TODO Auto-generated method stub
-		//System.out.println("onShot: new img");
+	public void onShot(byte[] img) {		
+		/*
 		int width = img.getWidth();
 		int height = img.getHeight();
 		//System.out.println("onShot: size: "+width+" h: "+height);
 		currentShot = img;
 		repaint();
+		 */
 		
-		File outputfile = getShotFile();
+		if (project != null)
+			project.saveShot(img);
+
+		// convert to image for display
+		InputStream in = new ByteArrayInputStream(img);
 		try {
-			ImageIO.write(currentShot, "jpg", outputfile);
-			System.out.println("onShot: save in" + outputfile.getAbsolutePath());
+			currentShot = ImageIO.read(in);
 		} catch (IOException e) {			
 			e.printStackTrace();
-		}
-		
+		}		
+		repaint();
 		
 	}
 

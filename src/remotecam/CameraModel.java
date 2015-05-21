@@ -78,16 +78,23 @@ public class CameraModel {
 
 		if (state == 2) {
 			System.out.println("parseMessage: in shot" );
+			/*
 			try {
+				
 				InputStream in = new ByteArrayInputStream(message.array());
 				BufferedImage img = ImageIO.read(in);
 
 				if (listener != null)
 					listener.onShot(img);
-
+				
+				
+				
 			} catch (IOException e) {			
 				e.printStackTrace();
-			}
+			} */
+			if (listener != null)
+				listener.onShot(message.array());
+			
 		} else if (state == 1) {
 			//System.out.println("parseMessage: in preview ("+width+","+height+")" );
 			// test encoding in phone?			

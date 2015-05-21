@@ -5,8 +5,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
@@ -16,6 +23,8 @@ public class frameWin extends JFrame implements KeyListener {
 	 */
 	private static final long serialVersionUID = 1L;
 	private jimage liveview;
+	private JButton filesel;
+	private File selectedFile;// = new File("src/images/image01.jpg");
 	
 	public frameWin(){
         
@@ -30,10 +39,23 @@ public class frameWin extends JFrame implements KeyListener {
 	
 		getContentPane().add(liveview);  	        
 
-		//Display the window.
-		pack();
-		setVisible(true);
-        
+		
+		filesel =new JButton("Select File");
+		filesel.addActionListener(new ActionListener(){
+ 
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+            	JFileChooser fileChooser = new JFileChooser();
+    			int returnValue = fileChooser.showOpenDialog(null);
+    			if (returnValue == JFileChooser.APPROVE_OPTION) {
+    				selectedFile = fileChooser.getSelectedFile();
+    			}
+            }
+        });
+
+			
+		add(filesel);
+		
         JButton buttonExit = new JButton(" Exit ");
         buttonExit.addActionListener(new ActionListener(){
  
@@ -44,9 +66,47 @@ public class frameWin extends JFrame implements KeyListener {
         });
          
         add(buttonExit);
-         
+        
+      //Display the window.
+      		pack();
+      		setVisible(true);
+              
+      		
     }
 
+	private File getShotFile() {
+		//take the current timeStamp
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		File mediaFile;
+		
+		//and make a media file:
+		//TODO:
+		final String projectdir="d:\\work\\stopproj";
+		/* project dir */
+		mediaFile = new File(projectdir + File.separator + "DSC_" + timeStamp + ".jpg");
+		return mediaFile;
+	}
+
+	public void saveShot(byte[] shot) {
+		System.out.println("saveShot");
+		// save file
+		File outputfile = getShotFile();
+		FileOutputStream stream = null;
+		try {
+			stream = new FileOutputStream(outputfile);
+		} catch (FileNotFoundException e) {		
+			e.printStackTrace();
+		}
+		try {
+			stream.write(shot);
+			stream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
+
+		System.out.println("saveShot: save in" + outputfile.getAbsolutePath());
+	}
+	
 	@Override
 	public void keyPressed(KeyEvent evt) {
 		if (evt.getKeyCode() == KeyEvent.VK_SPACE ) {
