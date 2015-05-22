@@ -1,5 +1,6 @@
 package remotecam;
 
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class CameraModel {
 			model = msg.split(":",2)[1];
 		} else
 			if (msg.startsWith("PSize")) {
-				getPreviewSize(msg);
+				setPreviewSize(msg);
 			} else
 				if (msg.startsWith("Shot")) {
 					//System.out.println("new shot");
@@ -53,7 +54,7 @@ public class CameraModel {
 	/*
 	 * camera send preview as w,h
 	 */
-	private void getPreviewSize(String msg) {
+	private void setPreviewSize(String msg) {
 		String blist = msg.split(":",2)[1];
 		String[] slist = blist.split("\\s*,\\s*");
 		width = Integer.parseInt(slist[0]);
@@ -128,6 +129,12 @@ public class CameraModel {
 		return model;
 	}
 
+	public Dimension getPreviewSize() 
+	{
+		Dimension psize = new Dimension(width,height);
+		return psize;
+	}
+	
 	public void attach(CameraModelListener listener) {
 		this.listener = listener;
 	}

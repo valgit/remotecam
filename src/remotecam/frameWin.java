@@ -25,7 +25,9 @@ public class frameWin extends JFrame implements KeyListener {
 	private jimage liveview;
 	private JButton filesel;
 	private File selectedFile;// = new File("src/images/image01.jpg");
-	
+	//TODO:
+	private File projectdir= new File("d:\\work\\stopproj");
+			
 	public frameWin(){
         
         setTitle("Camera View");
@@ -46,9 +48,12 @@ public class frameWin extends JFrame implements KeyListener {
             @Override
             public void actionPerformed(ActionEvent ae) {
             	JFileChooser fileChooser = new JFileChooser();
+            	fileChooser.setDialogTitle("project directory");
+            	fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            	fileChooser.setAcceptAllFileFilterUsed(false);
     			int returnValue = fileChooser.showOpenDialog(null);
     			if (returnValue == JFileChooser.APPROVE_OPTION) {
-    				selectedFile = fileChooser.getSelectedFile();
+    				projectdir = fileChooser.getCurrentDirectory();
     			}
             }
         });
@@ -79,9 +84,6 @@ public class frameWin extends JFrame implements KeyListener {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		File mediaFile;
 		
-		//and make a media file:
-		//TODO:
-		final String projectdir="d:\\work\\stopproj";
 		/* project dir */
 		mediaFile = new File(projectdir + File.separator + "DSC_" + timeStamp + ".jpg");
 		return mediaFile;

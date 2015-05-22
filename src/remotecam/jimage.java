@@ -1,6 +1,7 @@
 package remotecam;
 
 import java.awt.Canvas;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.GeneralPath;
@@ -43,6 +44,28 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	private BufferedImage currentShot; 
 	final static BasicStroke stroke = new BasicStroke(2.0f);
 	
+	private Dimension preserveRatio(Dimension img) {
+		Dimension frame = getSize();
+		
+		double resizedHeight;
+		double resizedWidth;
+		
+		double aspect = img.getWidth() / img.getHeight();
+		 
+		if(frame.getHeight() < frame.getWidth()) {
+		     resizedHeight = frame.getHeight();
+		     resizedWidth =  (resizedHeight * aspect);
+		}
+		 
+		else { // screen width is smaller than height (mobile, etc)
+		     resizedWidth = frame.getWidth();
+		     resizedHeight =  (resizedWidth / aspect);      
+		}
+		Dimension resized = new Dimension();
+		resized.setSize(resizedWidth, resizedHeight);
+		return resized;
+	}
+	
 	public void paint(Graphics g) {  
 		Graphics2D g2d = (Graphics2D) g;		
 		
@@ -52,32 +75,20 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
 				RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-		//System.out.println("paint - in ");
-		//Toolkit t=Toolkit.getDefaultToolkit();  
-		//Image i=t.getImage("p3.gif");
-		
-		int fw = getWidth();
-		int fh = getHeight();
-
-		//double ratio = (double)fw/fh;
 		g2d.setColor(Color.black);
-		g2d.fillRect(0, 0, fw, fh);
+		g2d.fillRect(0, 0, getWidth(), getHeight() );
+		
+		
 		
 		if (currentShot != null) {
 			//System.out.println("currentShot");							
 			int h = currentShot.getHeight(null);
 			int w = currentShot.getWidth(null);
 			
-			//double imgratio =(double)w/h;
-			//System.out.println("Frame ratio : " + ratio + " Shot ratio : " + imgratio);
-			double echx = (double)w/fw;
-			double echy = (double)h/fh;
-			double ech = 1.0;
+			Dimension dim_img = new Dimension(w,h);
 			
-			if (echx < 1.0)
-				ech = echx;
-			if ((echy<1) && (echy> echx))
-				ech = echy;
+			Dimension scaled = preserveRatio(dim_img);
+					
 			//System.out.println("Frame echx : " + echx + " echy : " + echy + " choose :" + ech);
 			/*
 			g2d.drawImage(currentShot, 
@@ -86,19 +97,19 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 					null);
 					*/
 			g2d.drawImage(currentShot, 
-					0,0,w,h, // dest
+					0,0,scaled.width,scaled.height, // dest
 					0,0,w,h, // src
 					null);
 		} 
 		
 		// draw HD frame
-		int hHD = 9* fw / 16;
-		int delta = (fh - hHD)/2;
+		int hHD = 9* getWidth() / 16;
+		int delta = (getHeight() - hHD)/2;
 				
 		g2d.setPaint(Color.magenta);
 		g2d.setStroke(stroke);
 		
-		Rectangle2D HDRect = new Rectangle(0,delta,fw,hHD);
+		Rectangle2D HDRect = new Rectangle(0,delta,getWidth(),hHD);
 		        
         g2d.draw(HDRect);
         /*
@@ -183,6 +194,9 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	public void addCamera(CameraModel camera) {
 		this.camera = camera;
 		camera.attach(this);
+		
+		Dimension preview = camera.getPreviewSize();
+		System.out.println("addCamera, preview is : " + preview);
 	}
 
 	@Override
