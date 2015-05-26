@@ -59,6 +59,10 @@ public class CameraModel {
 		String[] slist = blist.split("\\s*,\\s*");
 		width = Integer.parseInt(slist[0]);
 		height = Integer.parseInt(slist[1]);
+		if (listener != null) {
+			Dimension psize = new Dimension(width,height);
+			listener.onPreviewSize(psize);
+		}
 	}
 
 	/*

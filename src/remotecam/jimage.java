@@ -4,28 +4,20 @@ import java.awt.Canvas;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.*;
 
 import java.awt.*;  
 
-import javax.swing.JFrame;  
-
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;  
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class jimage extends Canvas implements ActionListener,CameraModelListener,CamSocketServerListener {
 	/**
@@ -41,8 +33,14 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	
 	private JButton snap;
 	
-	private BufferedImage currentShot; 
+	private BufferedImage previewFrame; 
+	private BufferedImage lastShot;
+	
 	final static BasicStroke stroke = new BasicStroke(2.0f);
+	private float alpha = 0.5f;
+	private AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER,alpha);
+
+	private Dimension scaled;
 	
 	private Dimension preserveRatio(Dimension img) {
 		Dimension frame = getSize();
@@ -69,26 +67,40 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	public void paint(Graphics g) {  
 		Graphics2D g2d = (Graphics2D) g;		
 		
+		Composite originalComposite = g2d.getComposite();
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
 				RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-
+		
+		
 		g2d.setColor(Color.black);
 		g2d.fillRect(0, 0, getWidth(), getHeight() );
-		
-		
-		
-		if (currentShot != null) {
-			//System.out.println("currentShot");							
-			int h = currentShot.getHeight(null);
-			int w = currentShot.getWidth(null);
+						
+		if (lastShot != null) {
+			int h = lastShot.getHeight(null);
+			int w = lastShot.getWidth(null);
+			g2d.drawImage(lastShot, 
+					0,0,w,h, // dest
+					0,0,w,h, // src
+					null);
+		}
+		if (previewFrame != null) {
+			g2d.setComposite(ac);
 			
+			
+			//System.out.println("currentShot");							
+			int h = previewFrame.getHeight(null);
+			int w = previewFrame.getWidth(null);
+			
+			/*
 			Dimension dim_img = new Dimension(w,h);
 			
 			Dimension scaled = preserveRatio(dim_img);
-					
+				
+					*/
+			
 			//System.out.println("Frame echx : " + echx + " echy : " + echy + " choose :" + ech);
 			/*
 			g2d.drawImage(currentShot, 
@@ -96,7 +108,7 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 					0,0,w,h, // src
 					null);
 					*/
-			g2d.drawImage(currentShot, 
+			g2d.drawImage(previewFrame, 
 					0,0,scaled.width,scaled.height, // dest
 					0,0,w,h, // src
 					null);
@@ -118,6 +130,8 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		g2d.drawRect(20, 150, 100, 100);
 		g2d.fillRect(20, 150, 100, 100);
 		 */
+        
+        g2d.setComposite(originalComposite);
 	}  
 
 	public jimage(frameWin f) {
@@ -131,7 +145,8 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		f.getContentPane().add(snap);
 				
 		project = f;
-		currentShot = null;
+		lastShot = null;
+		previewFrame = null;
 	}
 
 	void createAndShowGUI() {
@@ -174,7 +189,7 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 		// convert to image for display
 		InputStream in = new ByteArrayInputStream(img);
 		try {
-			currentShot = ImageIO.read(in);
+			lastShot = ImageIO.read(in);
 		} catch (IOException e) {			
 			e.printStackTrace();
 		}		
@@ -186,7 +201,7 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	public void onPreview(BufferedImage img) {
 		// TODO Auto-generated method stub
 		//System.out.println("onPreview: new img");
-		currentShot = img;
+		previewFrame = img;
 		repaint();
 	}
 
@@ -194,15 +209,20 @@ public class jimage extends Canvas implements ActionListener,CameraModelListener
 	public void addCamera(CameraModel camera) {
 		this.camera = camera;
 		camera.attach(this);
-		
-		Dimension preview = camera.getPreviewSize();
-		System.out.println("addCamera, preview is : " + preview);
+				
 	}
 
 	@Override
 	public void delCamera(CameraModel camera) {
 		camera.detach(this);
 		this.camera = null;		
+	}
+
+	@Override
+	public void onPreviewSize(Dimension psize) {	
+		System.out.println("onPreviewSize, preview is : " + psize);
+					
+		scaled = preserveRatio(psize);		
 	}
 
 }
